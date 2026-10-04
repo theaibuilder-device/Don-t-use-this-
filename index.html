@@ -1,0 +1,1302 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#050d14">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Jarvis">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>html{background:#050d14;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Jarvis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Oxanium:wght@500;700&display=swap">
+<style>
+/* Layout: Kommandodeck. Rechts steht die Erde mit der echten Tag-und-Nacht-Grenze, links Begrüßung, Uhr und Stimme. Darunter liegen die Module. */
+:root {
+  --ink: #050d14;
+  --panel: rgba(8, 22, 33, 0.86);
+  --panel-2: #0c2233;
+  --line: #133a52;
+  --text: #d9f3fc;
+  --dim: #7ca3b5;
+  --cyan: #4fd1f5;
+  --cyan-soft: rgba(79, 209, 245, 0.09);
+  --amber: #ffb454;
+  --ok: #5ee6a8;
+  --crit: #ff6b6b;
+  --font-display: "Oxanium", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-block: 20px 48px;
+  padding-inline: 16px;
+  background-image:
+    radial-gradient(560px circle at var(--mx, 72%) var(--my, 10%), rgba(79, 209, 245, 0.10), transparent 65%),
+    linear-gradient(var(--cyan-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cyan-soft) 1px, transparent 1px);
+  background-size: auto, 48px 48px, 48px 48px;
+  background-position: 0 0, -1px -1px, -1px -1px;
+  background-attachment: fixed, scroll, scroll;
+}
+.wrap { max-width: 1240px; margin-inline: auto; display: flex; flex-direction: column; gap: 20px; }
+.label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--dim); }
+
+/* Kopfzeile */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.brand { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.3em; font-size: 15px; display: flex; align-items: center; gap: 10px; }
+.brand i { width: 10px; height: 10px; background: var(--cyan); display: inline-block; transform: rotate(45deg); box-shadow: 0 0 10px var(--cyan); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--line); padding: 3px 9px; color: var(--dim); display: inline-flex; align-items: center; gap: 6px; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+.chip.ok { color: var(--ok); border-color: rgba(94, 230, 168, 0.4); }
+.chip.ok::before { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.chip.bad { color: var(--crit); border-color: rgba(255, 107, 107, 0.45); }
+.chip.bad::before { background: var(--crit); }
+
+/* Hero */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 32px; align-items: center; }
+.hero-text { display: flex; flex-direction: column; gap: 14px; min-width: 0; align-items: flex-start; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(2.7rem, 8.4vw, 5.4rem); line-height: 0.96; margin: 0; letter-spacing: 0.004em; text-wrap: balance; text-shadow: 0 0 34px rgba(79, 209, 245, 0.38); }
+.clock { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
+.clock .t { font-family: var(--font-mono); font-size: clamp(1.7rem, 4.2vw, 2.5rem); font-variant-numeric: tabular-nums; color: var(--cyan); text-shadow: 0 0 18px rgba(79, 209, 245, 0.4); }
+.clock .d { color: var(--dim); font-size: 15px; }
+.sub { font-size: 14px; color: var(--dim); }
+#eq { width: 100%; max-width: 460px; height: 44px; display: block; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.globe-wrap { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+#globe { width: 100%; max-width: 620px; aspect-ratio: 1; display: block; cursor: grab; touch-action: pan-y; }
+#globe:active { cursor: grabbing; }
+.ro { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 20px; font-family: var(--font-mono); font-size: 12px; color: var(--dim); }
+.ro b { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+.hint { font-size: 12px; color: var(--dim); text-align: center; }
+@media (max-width: 900px) { .hero { grid-template-columns: minmax(0, 1fr); } }
+
+button, input, textarea, select { font: inherit; color: inherit; }
+.btn { background: transparent; border: 1px solid var(--cyan); color: var(--cyan); padding: 8px 15px; font-family: var(--font-mono); font-size: 13px; cursor: pointer; transition: background 0.15s; }
+.btn:hover { background: var(--cyan-soft); }
+.btn.amber { border-color: var(--amber); color: var(--amber); }
+.btn.amber:hover { background: rgba(255, 180, 84, 0.12); }
+.btn[aria-pressed="true"] { background: var(--cyan); color: var(--ink); }
+.btn.sm { padding: 4px 10px; font-size: 12px; }
+@media (prefers-reduced-motion: no-preference) {
+  .btn.pulse { animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(79, 209, 245, 0.5); } 50% { box-shadow: 0 0 0 8px rgba(79, 209, 245, 0); } }
+}
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* Stimme anpassen */
+.vset { border-top: 1px solid var(--line); padding-top: 10px; width: 100%; max-width: 460px; }
+.vset summary { cursor: pointer; color: var(--dim); font-family: var(--font-mono); font-size: 12px; }
+.vgrid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 12px; align-items: center; margin-top: 10px; font-size: 13px; }
+.vgrid select { width: 100%; min-width: 0; background: var(--ink); border: 1px solid var(--line); padding: 6px 8px; }
+.vgrid input[type="range"] { width: 100%; min-width: 0; accent-color: var(--cyan); }
+.vinfo { grid-column: 1 / -1; color: var(--dim); font-size: 12px; font-family: var(--font-mono); overflow-wrap: anywhere; }
+
+/* Panels */
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+.s7 { grid-column: span 7; } .s5 { grid-column: span 5; } .s4 { grid-column: span 4; } .s12 { grid-column: span 12; }
+@media (max-width: 900px) { .s7, .s5, .s4 { grid-column: span 12; } }
+.panel { position: relative; background: var(--panel); border: 1px solid var(--line); padding: 16px; min-width: 0; }
+.panel::before, .panel::after { content: ""; position: absolute; width: 12px; height: 12px; border: 2px solid var(--cyan); pointer-events: none; }
+.panel::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+.panel::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+.ph { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.ph .meta { font-family: var(--font-mono); font-size: 12px; color: var(--cyan); }
+kbd { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--line); padding: 0 5px; color: var(--dim); }
+
+/* Konsole */
+#log { height: 290px; overflow-y: auto; border: 1px solid var(--line); background: var(--ink); padding: 12px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.ln { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ln .who { font-family: var(--font-mono); font-size: 12px; display: block; margin-bottom: 1px; }
+.ln.you .who { color: var(--amber); }
+.ln.jarvis .who { color: var(--cyan); }
+.ln.sys { color: var(--dim); font-family: var(--font-mono); font-size: 12px; }
+.ln.sys .who { display: none; }
+.cmd { display: flex; gap: 8px; margin-top: 10px; }
+.cmd input { flex: 1; min-width: 0; background: var(--ink); border: 1px solid var(--line); padding: 9px 12px; font-family: var(--font-mono); font-size: 14px; }
+.cmd input::placeholder { color: var(--dim); }
+.sugg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.sugg button { background: var(--panel-2); border: 1px solid var(--line); color: var(--dim); padding: 4px 10px; font-size: 12px; cursor: pointer; }
+.sugg button:hover { color: var(--text); border-color: var(--cyan); }
+
+/* Missionen */
+.add { display: flex; gap: 8px; margin-bottom: 10px; }
+.add input { flex: 1; min-width: 0; background: var(--ink); border: 1px solid var(--line); padding: 8px 12px; }
+ul.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+ul.list li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); min-width: 0; }
+ul.list li:first-child { border-top: 0; }
+ul.list label { flex: 1; min-width: 0; overflow-wrap: anywhere; cursor: pointer; }
+ul.list input[type="checkbox"] { accent-color: var(--cyan); width: 16px; height: 16px; flex: none; }
+ul.list li.done label { color: var(--dim); text-decoration: line-through; }
+.x { background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; }
+.x:hover { color: var(--crit); }
+.empty { color: var(--dim); font-size: 13px; padding: 8px 0; }
+
+/* Timer */
+.ringbox { position: relative; width: min(100%, 190px); aspect-ratio: 1; margin: 0 auto 14px; }
+.ringbox svg { width: 100%; height: 100%; display: block; }
+.trk { fill: none; stroke: var(--panel-2); stroke-width: 5; }
+.dots { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 1 5.4; }
+.prog { fill: none; stroke: var(--cyan); stroke-width: 5; filter: drop-shadow(0 0 4px var(--cyan)); }
+.ringbox.end .prog { stroke: var(--amber); filter: drop-shadow(0 0 4px var(--amber)); }
+.ringbox .big { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: clamp(1.7rem, 5vw, 2.1rem); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) { .prog { transition: stroke-dashoffset 0.25s linear; } }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row input[type="number"] { width: 72px; background: var(--ink); border: 1px solid var(--line); padding: 5px 8px; font-family: var(--font-mono); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; justify-content: center; }
+
+/* Weltzeit */
+.wl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.wrow { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 12px; align-items: center; background: none; border: 0; border-top: 1px solid var(--line); padding: 9px 6px; text-align: left; cursor: pointer; color: inherit; }
+.wl li:first-child .wrow { border-top: 0; }
+.wrow:hover, .wrow[aria-current="true"] { background: var(--cyan-soft); }
+.wrow[aria-current="true"] .n { color: var(--cyan); }
+.wrow .n { font-size: 15px; }
+.wrow .s { grid-column: 1; font-family: var(--font-mono); font-size: 11px; color: var(--dim); overflow-wrap: anywhere; }
+.wrow .tm { grid-column: 2; grid-row: 1 / span 2; font-family: var(--font-mono); font-size: 22px; font-variant-numeric: tabular-nums; }
+
+/* Status */
+#fps { width: 100%; height: 60px; display: block; margin-bottom: 8px; }
+table { width: 100%; border-collapse: collapse; }
+td { padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+td:last-child { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: var(--ink); border: 1px solid var(--line); padding: 12px; font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><i></i>J.A.R.V.I.S.</div>
+    <div class="chips">
+      <span class="chip ok" id="chipNet">Netz online</span>
+      <span class="chip" id="chipAi">KI-Kern prüft</span>
+      <span class="chip" id="chipVoice">Stimme aus</span>
+    </div>
+  </header>
+
+  <section class="hero" aria-label="Begrüßung">
+    <div class="hero-text">
+      <div class="label">Zugang bestätigt</div>
+      <h1 aria-label="Hallo Boss Noah"><span id="g1">Hallo Boss </span><span id="g2">Noah</span></h1>
+      <div class="clock"><span class="t" id="subTime">--:--:--</span><span class="d" id="subDate">&nbsp;</span></div>
+      <div class="sub" id="subLine">Alle Systeme laufen.</div>
+      <canvas id="eq" width="460" height="44" aria-hidden="true"></canvas>
+      <div class="hero-actions">
+        <button class="btn pulse" id="btnVoice" aria-pressed="false">Jarvis aktivieren</button>
+        <button class="btn amber" id="btnFocus">Befehl eingeben</button>
+        <button class="btn" id="btnInstall" hidden>App installieren</button>
+      </div>
+      <details class="vset">
+        <summary>Stimme anpassen</summary>
+        <div class="vgrid">
+          <label for="vSel">Stimme</label><select id="vSel"></select>
+          <label for="vRate">Tempo</label><input id="vRate" type="range" min="0.7" max="1.4" step="0.05" value="1">
+          <label for="vPitch">Tonhöhe</label><input id="vPitch" type="range" min="0.5" max="1.5" step="0.05" value="0.85">
+          <span></span><button class="btn sm" id="vTest" type="button" style="justify-self:start">Stimme testen</button>
+          <div class="vinfo" id="vInfo">Stimmen werden geladen …</div>
+        </div>
+      </details>
+    </div>
+    <div class="globe-wrap">
+      <canvas id="globe" width="620" height="620" tabindex="0" role="img" aria-label="Drehbarer Globus mit der aktuellen Tag-und-Nacht-Grenze"></canvas>
+      <div class="ro">
+        <span>Sonne über <b id="roSun">–</b></span>
+        <span>Berlin, Aufgang <b id="roRise">–</b></span>
+        <span>Untergang <b id="roSet">–</b></span>
+      </div>
+      <div class="hint">Ziehen zum Drehen. Eine Stadt in der Weltzeit antippen, um sie anzuspringen.</div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="panel s7" aria-label="Konsole">
+      <div class="ph"><span class="label">Konsole <kbd>/</kbd></span><span class="meta" id="logMeta">bereit</span></div>
+      <div id="log" role="log" aria-live="polite"></div>
+      <form class="cmd" id="cmdForm" autocomplete="off">
+        <input id="cmd" type="text" placeholder="Frage oder Befehl" aria-label="Befehl an Jarvis">
+        <button class="btn" type="submit">Senden</button>
+      </form>
+      <div class="sugg" id="sugg"></div>
+    </section>
+
+    <section class="panel s5" aria-label="Missionen">
+      <div class="ph"><span class="label">Missionen</span><span class="meta" id="mCount"></span></div>
+      <form class="add" id="mForm" autocomplete="off">
+        <input id="mInput" type="text" placeholder="Neue Mission" aria-label="Neue Mission">
+        <button class="btn" type="submit">Hinzufügen</button>
+      </form>
+      <ul class="list" id="mList"></ul>
+    </section>
+
+    <section class="panel s4" aria-label="Timer">
+      <div class="ph"><span class="label">Fokus-Timer</span><span class="meta" id="tState">bereit</span></div>
+      <div class="ringbox" id="tBox">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="dots" cx="60" cy="60" r="57"></circle>
+          <circle class="trk" cx="60" cy="60" r="50"></circle>
+          <circle class="prog" id="tRing" cx="60" cy="60" r="50" transform="rotate(-90 60 60)" stroke-dasharray="314.16" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="big" id="tDisp">25:00</div>
+      </div>
+      <div class="presets" id="presets"></div>
+      <div class="row" style="justify-content:center">
+        <input id="tMin" type="number" min="1" max="600" value="25" aria-label="Minuten"><span class="label">Min</span>
+        <button class="btn" id="tGo">Start</button>
+        <button class="btn" id="tReset">Reset</button>
+      </div>
+    </section>
+
+    <section class="panel s4" aria-label="Weltzeit">
+      <div class="ph"><span class="label">Weltzeit</span><span class="meta">Sonnenstand live</span></div>
+      <ul class="wl" id="wl"></ul>
+    </section>
+
+    <section class="panel s4" aria-label="Systemstatus">
+      <div class="ph"><span class="label">Systemstatus</span><span class="meta">dieses Gerät</span></div>
+      <canvas id="fps" width="300" height="60" aria-hidden="true"></canvas>
+      <table id="sys"></table>
+    </section>
+
+    <section class="panel s12" aria-label="Notizen">
+      <div class="ph"><span class="label">Notizblock</span><span class="meta">wird auf diesem Gerät gespeichert</span></div>
+      <textarea id="notes" placeholder="Ideen, Links, Gedanken. Alles bleibt in diesem Browser."></textarea>
+    </section>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var pad = function (n) { return String(n).padStart(2, "0"); };
+  var RAD = Math.PI / 180, TAU = Math.PI * 2;
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var tz = "Europe/Berlin";
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch (e) {}
+  var started = Date.now();
+  var busy = false, speaking = false, voiceOn = false, activated = false, sample = null, boostUntil = 0;
+  var cs = getComputedStyle(document.documentElement);
+  function tok(n, fb) { return cs.getPropertyValue(n).trim() || fb; }
+  var CY = tok("--cyan", "#4fd1f5"), AM = tok("--amber", "#ffb454");
+  var MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
+
+  function phrase(d) {
+    var h = d.getHours();
+    return h < 5 ? "Späte Schicht, Boss." : h < 11 ? "Guten Morgen." : h < 18 ? "Guten Tag." : "Guten Abend.";
+  }
+
+  /* ---------- Sonne: echter Stand aus Datum und Uhrzeit ---------- */
+  function norm(a) { a = a % TAU; if (a > Math.PI) a -= TAU; if (a < -Math.PI) a += TAU; return a; }
+  function sunAt(date) {
+    var n = date.getTime() / 86400000 + 2440587.5 - 2451545.0;
+    var L = ((280.460 + 0.9856474 * n) % 360 + 360) % 360;
+    var g = (((357.528 + 0.9856003 * n) % 360) + 360) % 360 * RAD;
+    var lam = (L + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g)) * RAD;
+    var eps = (23.439 - 0.0000004 * n) * RAD;
+    var dec = Math.asin(Math.sin(eps) * Math.sin(lam));
+    var ra = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam));
+    var gmst = ((18.697374558 + 24.06570982441908 * n) % 24 + 24) % 24;
+    return { dec: dec, lon: norm(ra - gmst * 15 * RAD), eot: norm((L - 0.0057183) * RAD - ra) / RAD * 4 };
+  }
+  function elevAt(latDeg, lonDeg, s) {
+    var la = latDeg * RAD, lo = lonDeg * RAD;
+    var v = Math.sin(la) * Math.sin(s.dec) + Math.cos(la) * Math.cos(s.dec) * Math.cos(lo - s.lon);
+    return Math.asin(Math.max(-1, Math.min(1, v))) / RAD;
+  }
+  function sunTimes(latDeg, lonDeg, zone) {
+    var parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, year: "numeric", month: "numeric", day: "numeric" }).formatToParts(new Date());
+    var y = 0, m = 0, d = 0;
+    parts.forEach(function (p) { if (p.type === "year") y = +p.value; if (p.type === "month") m = +p.value - 1; if (p.type === "day") d = +p.value; });
+    var s = sunAt(new Date(Date.UTC(y, m, d, 12)));
+    var lat = latDeg * RAD;
+    var cosH = (Math.sin(-0.833 * RAD) - Math.sin(lat) * Math.sin(s.dec)) / (Math.cos(lat) * Math.cos(s.dec));
+    if (cosH > 1 || cosH < -1) return null;
+    var H = Math.acos(cosH) / RAD, noon = 720 - 4 * lonDeg - s.eot, base = Date.UTC(y, m, d);
+    return { rise: new Date(base + (noon - 4 * H) * 60000), set: new Date(base + (noon + 4 * H) * 60000) };
+  }
+  function fmtT(date, zone) { return new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: zone }).format(date); }
+  function fmtLat(v) { return Math.abs(v).toFixed(1) + "° " + (v >= 0 ? "N" : "S"); }
+  function fmtLon(v) { return Math.abs(v).toFixed(1) + "° " + (v >= 0 ? "O" : "W"); }
+
+  var CITIES = [
+    { id: "berlin", n: "Berlin", z: "Europe/Berlin", lat: 52.52, lon: 13.405, keys: ["berlin"] },
+    { id: "ny", n: "New York", z: "America/New_York", lat: 40.71, lon: -74.01, keys: ["new york", "newyork"] },
+    { id: "la", n: "Los Angeles", z: "America/Los_Angeles", lat: 34.05, lon: -118.24, keys: ["los angeles", "kalifornien"] },
+    { id: "tokio", n: "Tokio", z: "Asia/Tokyo", lat: 35.68, lon: 139.69, keys: ["tokio", "tokyo", "japan"] }
+  ];
+  function findCity(q) {
+    q = q.toLowerCase();
+    return CITIES.filter(function (c) { return c.keys.some(function (k) { return q.indexOf(k) >= 0; }); })[0];
+  }
+
+  /* ---------- Landpunkte (Weltkarte, 2.7k Rasterpunkte) ---------- */
+  var LAND = "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";
+  var NP = 0, LAT_S = new Float32Array(0), LAT_C = new Float32Array(0), LON = new Float32Array(0), LIT = new Float32Array(0), HSH = new Float32Array(0);
+  (function () {
+    try {
+      var bin = atob(LAND), n = Math.floor(bin.length / 4), i;
+      var b = new Uint8Array(bin.length);
+      for (i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
+      var dv = new DataView(b.buffer);
+      LAT_S = new Float32Array(n); LAT_C = new Float32Array(n); LON = new Float32Array(n); LIT = new Float32Array(n); HSH = new Float32Array(n);
+      for (i = 0; i < n; i++) {
+        var la = dv.getInt16(i * 4, true) / 100 * RAD, lo = dv.getInt16(i * 4 + 2, true) / 100 * RAD;
+        LAT_S[i] = Math.sin(la); LAT_C[i] = Math.cos(la); LON[i] = lo;
+        HSH[i] = ((i * 2654435761) >>> 0) / 4294967296;
+      }
+      NP = n;
+    } catch (e) { NP = 0; }
+  })();
+
+  /* ---------- Klangeffekte ---------- */
+  var actx = null;
+  function ac() {
+    try {
+      if (!actx) { var A = window.AudioContext || window.webkitAudioContext; actx = new A(); }
+      if (actx.state === "suspended") actx.resume();
+    } catch (e) { actx = null; }
+    return actx;
+  }
+  function tone(f0, f1, dur, type, vol, delay) {
+    var c = ac(); if (!c) return;
+    var t = c.currentTime + (delay || 0);
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  function sfx(k) {
+    if (!activated) return;
+    if (k === "boot") { tone(70, 900, 1.0, "sawtooth", 0.05); tone(1200, 1200, 0.08, "square", 0.03, 1.0); tone(1800, 1800, 0.1, "square", 0.03, 1.12); }
+    else if (k === "send") tone(700, 1200, 0.09, "square", 0.025);
+    else if (k === "recv") tone(1400, 900, 0.12, "sine", 0.04);
+    else if (k === "jump") tone(500, 1500, 0.22, "triangle", 0.03);
+  }
+
+  /* ---------- Konsole ---------- */
+  var log = $("#log");
+  function addLine(role, text) {
+    var el = document.createElement("div");
+    el.className = "ln " + role;
+    var who = document.createElement("span");
+    who.className = "who";
+    who.textContent = role === "you" ? "Noah" : "Jarvis";
+    var body = document.createElement("span");
+    body.className = "body";
+    body.textContent = text;
+    el.appendChild(who);
+    el.appendChild(body);
+    log.appendChild(el);
+    log.scrollTop = log.scrollHeight;
+    return body;
+  }
+  function typeInto(el, text) {
+    if (reduce) { el.textContent = text; log.scrollTop = log.scrollHeight; return; }
+    var i = 0;
+    el.textContent = "";
+    var iv = setInterval(function () {
+      i += 2;
+      el.textContent = text.slice(0, i);
+      log.scrollTop = log.scrollHeight;
+      if (i >= text.length) { clearInterval(iv); el.textContent = text; }
+    }, 18);
+  }
+  function say(text) {
+    typeInto(addLine("jarvis", ""), text);
+    sfx("recv");
+    speakNow(text);
+  }
+  function sysLine(text) { addLine("sys", text); }
+
+  /* ---------- Sprachausgabe ---------- */
+  var TTS = { ok: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window, voices: [], gen: 0, pending: 0, started: false, blocked: false, keep: [], wd: null };
+  var vs = store.get("jarvis.voice", {});
+  TTS.saved = vs.name || "";
+  TTS.rate = typeof vs.rate === "number" ? vs.rate : 1;
+  TTS.pitch = typeof vs.pitch === "number" ? vs.pitch : 0.85;
+  function isDe(v) { return v && v.lang && /^de/i.test(String(v.lang).replace("_", "-")); }
+  var PREF = /(google deutsch|stefan|conrad|markus|daniel|yannick|florian|jürgen|hans|killian)/i;
+  function pickVoice() {
+    var all = TTS.voices;
+    if (!all.length) return null;
+    if (TTS.saved) {
+      var s = all.filter(function (v) { return v.name === TTS.saved; })[0];
+      if (s) return s;
+    }
+    var de = all.filter(isDe);
+    if (!de.length) return null;
+    return de.filter(function (v) { return PREF.test(v.name); })[0]
+      || de.filter(function (v) { return /^de-de$/i.test(String(v.lang).replace("_", "-")); })[0]
+      || de[0];
+  }
+  function loadVoices() {
+    if (!TTS.ok) { $("#vInfo").textContent = "Dieser Browser bietet keine Sprachausgabe. Jarvis antwortet nur per Text und Ton."; return; }
+    try { TTS.voices = speechSynthesis.getVoices() || []; } catch (e) { TTS.voices = []; }
+    var sel = $("#vSel");
+    var cur = TTS.saved;
+    sel.innerHTML = "";
+    sel.add(new Option("Automatisch (beste deutsche Stimme)", ""));
+    TTS.voices.slice().sort(function (a, b) {
+      return (isDe(a) ? 0 : 1) - (isDe(b) ? 0 : 1) || a.name.localeCompare(b.name);
+    }).forEach(function (v) { sel.add(new Option(v.name + " (" + v.lang + ")", v.name)); });
+    sel.value = cur;
+    if (sel.value !== cur) sel.value = "";
+    var n = TTS.voices.filter(isDe).length;
+    $("#vInfo").textContent = !TTS.voices.length ? "Noch keine Stimmen geladen. Klick auf \"Stimme testen\"."
+      : n ? n + " deutsche Stimme" + (n > 1 ? "n" : "") + " gefunden."
+      : "Keine deutsche Stimme installiert. Jarvis nutzt die Standardstimme dieses Geräts.";
+  }
+  if (TTS.ok) {
+    loadVoices();
+    try { speechSynthesis.addEventListener("voiceschanged", loadVoices); } catch (e) { speechSynthesis.onvoiceschanged = loadVoices; }
+    setTimeout(loadVoices, 800);
+  } else { loadVoices(); }
+  $("#vRate").value = TTS.rate;
+  $("#vPitch").value = TTS.pitch;
+  function saveVoice() { store.set("jarvis.voice", { name: TTS.saved, rate: TTS.rate, pitch: TTS.pitch }); }
+  $("#vSel").addEventListener("change", function () { TTS.saved = $("#vSel").value; saveVoice(); });
+  $("#vRate").addEventListener("input", function () { TTS.rate = parseFloat($("#vRate").value); saveVoice(); });
+  $("#vPitch").addEventListener("input", function () { TTS.pitch = parseFloat($("#vPitch").value); saveVoice(); });
+  $("#vTest").addEventListener("click", function () {
+    loadVoices();
+    ac();
+    speakNow("Hallo Boss Noah. Das ist meine Stimme.", true);
+  });
+
+  function setVoiceChip() {
+    var c = $("#chipVoice");
+    if (TTS.blocked) { c.textContent = "Stimme blockiert"; c.className = "chip bad"; }
+    else if (voiceOn) { c.textContent = "Stimme an"; c.className = "chip ok"; }
+    else { c.textContent = "Stimme aus"; c.className = "chip"; }
+  }
+  function armWatch() {
+    clearTimeout(TTS.wd);
+    TTS.wd = setTimeout(function () {
+      if (TTS.pending > 0 && !TTS.started) {
+        TTS.pending = 0; speaking = false;
+        try { speechSynthesis.cancel(); } catch (e) {}
+        if (!TTS.blocked) {
+          TTS.blocked = true;
+          setVoiceChip();
+          sysLine("Die Sprachausgabe startet hier nicht. Prüfe Lautstärke, Stumm-Schalter und die Stimmenauswahl unter \"Stimme anpassen\". Ich antworte weiter per Text und Ton.");
+        }
+      }
+    }, 3500);
+  }
+  function queue(t, gen) {
+    t = t.replace(/\s+/g, " ").trim();
+    if (!t || !/[A-Za-zÄÖÜäöüß0-9]/.test(t)) return;
+    var u = new SpeechSynthesisUtterance(t);
+    var v = pickVoice();
+    u.lang = v ? v.lang : "de-DE";
+    if (v) u.voice = v;
+    u.rate = TTS.rate;
+    u.pitch = TTS.pitch;
+    u.onstart = function () {
+      TTS.started = true;
+      if (TTS.blocked) { TTS.blocked = false; setVoiceChip(); }
+    };
+    u.onend = u.onerror = function () {
+      if (gen !== TTS.gen) return;
+      TTS.pending = Math.max(0, TTS.pending - 1);
+      if (TTS.pending === 0) speaking = false;
+    };
+    TTS.keep.push(u);
+    if (TTS.keep.length > 40) TTS.keep.shift();
+    if (TTS.pending === 0) { TTS.started = false; armWatch(); }
+    TTS.pending++;
+    speaking = true;
+    try { speechSynthesis.resume(); speechSynthesis.speak(u); } catch (e) { TTS.pending = Math.max(0, TTS.pending - 1); if (!TTS.pending) speaking = false; }
+  }
+  function clean(text) {
+    return String(text).replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "").replace(/[*_`#]/g, "");
+  }
+  function speakNow(text, force) {
+    if (!TTS.ok || !(voiceOn || force)) return;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    TTS.gen++; TTS.pending = 0; speaking = false;
+    var parts = clean(text).match(/[^.!?…]+[.!?…]*\s*/g) || [clean(text)];
+    parts.forEach(function (p) { queue(p, TTS.gen); });
+  }
+  var streamSpoken = 0;
+  function streamFeed(text, final) {
+    if (!TTS.ok || !voiceOn) return;
+    var rest = text.slice(streamSpoken);
+    var re = /[^.!?…]*[.!?…]+\s/g, m, end = 0;
+    while ((m = re.exec(rest))) { queue(clean(m[0]), TTS.gen); end = re.lastIndex; }
+    streamSpoken += end;
+    if (final) {
+      var tail = text.slice(streamSpoken);
+      if (tail.trim()) queue(clean(tail), TTS.gen);
+      streamSpoken = text.length;
+    }
+  }
+
+  /* ---------- Aktivierung und Boot ---------- */
+  var CH = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&/<>";
+  function scramble(el, finalText, ms) {
+    if (reduce) { el.textContent = finalText; return; }
+    var t0 = performance.now();
+    (function step(now) {
+      var p = Math.min(1, (now - t0) / ms), n = Math.floor(p * finalText.length), s = "";
+      for (var i = 0; i < finalText.length; i++) {
+        var c = finalText.charAt(i);
+        s += (i < n || c === " ") ? c : CH.charAt(Math.floor(Math.random() * CH.length));
+      }
+      el.textContent = s;
+      if (p < 1) requestAnimationFrame(step); else el.textContent = finalText;
+    })(t0);
+  }
+  function boot() {
+    [["Kernmodule laden", 0], ["Satellitenbild abgleichen", 350], ["Sprachausgabe kalibrieren", 700], ["Alle Systeme online", 1050]].forEach(function (s) {
+      setTimeout(function () { sysLine("› " + s[0] + " … OK"); }, s[1]);
+    });
+    boostUntil = performance.now() + 2200;
+    scramble($("#g1"), "Hallo Boss ", 900);
+    scramble($("#g2"), "Noah", 1100);
+    sfx("boot");
+  }
+  function unlockSpeech() {
+    if (!TTS.ok) return;
+    try { var u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+  }
+  $("#btnVoice").addEventListener("click", function () {
+    var b = $("#btnVoice");
+    if (!voiceOn) {
+      voiceOn = true;
+      var first = !activated;
+      activated = true;
+      ac();
+      unlockSpeech();
+      b.setAttribute("aria-pressed", "true");
+      b.classList.remove("pulse");
+      b.textContent = "Stimme ausschalten";
+      TTS.blocked = false;
+      setVoiceChip();
+      if (first) boot();
+      speakNow("Hallo Boss Noah. " + phrase(new Date()) + " Alle Systeme sind online.");
+      if (!TTS.ok) sysLine("Dieser Browser hat keine Sprachausgabe. Ich nutze Text und Klangeffekte.");
+    } else {
+      voiceOn = false;
+      try { speechSynthesis.cancel(); } catch (e) {}
+      TTS.gen++; TTS.pending = 0; speaking = false;
+      b.setAttribute("aria-pressed", "false");
+      b.textContent = "Stimme einschalten";
+      setVoiceChip();
+    }
+  });
+  $("#btnFocus").addEventListener("click", function () { $("#cmd").focus(); $("#cmd").scrollIntoView({ block: "center" }); });
+  document.addEventListener("keydown", function (e) {
+    var tg = e.target && e.target.tagName;
+    if (e.key === "/" && tg !== "INPUT" && tg !== "TEXTAREA" && tg !== "SELECT") { e.preventDefault(); $("#cmd").focus(); }
+  });
+
+  /* ---------- Globus ---------- */
+  var globe = (function () {
+    var cv = $("#globe"), cx = cv.getContext("2d");
+    var S = 560, C = 280, R = 207, dpr = 1;
+    var st = { lat: 0.1, lon: 13.4 * RAD + 1.6 };
+    var target = null, resumeAt = 0, drag = false, lx = 0, ly = 0, sel = "berlin";
+    var sun = sunAt(new Date());
+    var M = 132, sh = document.createElement("canvas");
+    sh.width = M; sh.height = M;
+    var shx = sh.getContext("2d"), img = shx.createImageData(M, M);
+    var PX = new Float32Array(NP), PY = new Float32Array(NP), PZ = new Float32Array(NP);
+    var api = { onSel: null };
+
+    function update() {
+      sun = sunAt(new Date());
+      var ds = Math.sin(sun.dec), dc = Math.cos(sun.dec);
+      for (var k = 0; k < NP; k++) LIT[k] = LAT_S[k] * ds + LAT_C[k] * dc * Math.cos(LON[k] - sun.lon);
+    }
+    function goTo(city, instant) {
+      sel = city.id;
+      target = { lon: city.lon * RAD, lat: Math.max(-0.7, Math.min(0.95, city.lat * RAD * 0.55)) };
+      if (instant || reduce) { st.lon = target.lon; st.lat = target.lat; target = null; resumeAt = performance.now() + 8000; if (reduce) render(0, 0); }
+      if (api.onSel) api.onSel(city.id);
+    }
+    function fit() {
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      var r = cv.getBoundingClientRect();
+      S = Math.max(240, r.width || 560); C = S / 2; R = S * 0.37;
+      cv.width = Math.round(S * dpr); cv.height = Math.round(S * dpr);
+      cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function step(dt, now) {
+      if (drag) return;
+      if (target) {
+        var k = 1 - Math.exp(-dt * 3.0);
+        st.lon += norm(target.lon - st.lon) * k;
+        st.lat += (target.lat - st.lat) * k;
+        if (Math.abs(norm(target.lon - st.lon)) < 0.004 && Math.abs(target.lat - st.lat) < 0.004) { target = null; resumeAt = now + 7000; }
+      } else if (now > resumeAt) {
+        st.lon -= dt * 0.045;
+      }
+    }
+    function shade(sx, sy, sz) {
+      var d = img.data, i = 0, x, y, nx, ny, r2, nz, lit, t, dd, rim;
+      for (y = 0; y < M; y++) {
+        ny = 1 - (y + 0.5) / M * 2;
+        for (x = 0; x < M; x++) {
+          nx = (x + 0.5) / M * 2 - 1;
+          r2 = nx * nx + ny * ny;
+          if (r2 >= 1) { d[i] = 0; d[i + 1] = 0; d[i + 2] = 0; d[i + 3] = 0; i += 4; continue; }
+          nz = Math.sqrt(1 - r2);
+          lit = nx * sx + ny * sy + nz * sz;
+          t = (lit + 0.10) / 0.32; t = t < 0 ? 0 : t > 1 ? 1 : t; dd = t * t * (3 - 2 * t);
+          rim = 1 - nz; rim = rim * rim;
+          d[i] = 4 + 10 * dd + rim * (14 + 22 * dd);
+          d[i + 1] = 13 + 42 * dd + rim * (70 + 60 * dd);
+          d[i + 2] = 22 + 58 * dd + rim * (95 + 70 * dd);
+          d[i + 3] = 255;
+          i += 4;
+        }
+      }
+      shx.putImageData(img, 0, 0);
+    }
+    function render(ts, level) {
+      var sl0 = Math.sin(st.lat), cl0 = Math.cos(st.lat), lo0 = st.lon, k, i, x, y, z, pen, la, lo, d2, cd;
+      var ds = Math.sin(sun.dec), dc = Math.cos(sun.dec), dl = sun.lon - lo0, cdl = Math.cos(dl);
+      var sx = dc * Math.sin(dl), sy = cl0 * ds - sl0 * dc * cdl, sz = sl0 * ds + cl0 * dc * cdl;
+      cx.clearRect(0, 0, S, S);
+
+      // Atmosphäre
+      var g = cx.createRadialGradient(C, C, R * 0.97, C, C, R * 1.22);
+      g.addColorStop(0, "rgba(79,209,245,0.32)"); g.addColorStop(1, "rgba(79,209,245,0)");
+      cx.fillStyle = g; cx.beginPath(); cx.arc(C, C, R * 1.22, 0, TAU); cx.fill();
+
+      // Kugel mit Tag und Nacht
+      shade(sx, sy, sz);
+      cx.save(); cx.beginPath(); cx.arc(C, C, R, 0, TAU); cx.clip();
+      cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = "high";
+      cx.drawImage(sh, C - R, C - R, 2 * R, 2 * R);
+      cx.restore();
+
+      // Gradnetz
+      cx.lineWidth = 1; cx.strokeStyle = "rgba(79,209,245,0.15)"; cx.beginPath();
+      for (la = -60; la <= 60; la += 30) {
+        var sla = Math.sin(la * RAD), cla = Math.cos(la * RAD); pen = false;
+        for (lo = -180; lo <= 180; lo += 6) {
+          d2 = lo * RAD - lo0; cd = Math.cos(d2);
+          z = sl0 * sla + cl0 * cla * cd;
+          if (z > 0) { x = C + R * cla * Math.sin(d2); y = C - R * (cl0 * sla - sl0 * cla * cd); if (pen) cx.lineTo(x, y); else { cx.moveTo(x, y); pen = true; } } else pen = false;
+        }
+      }
+      for (lo = -180; lo < 180; lo += 30) {
+        d2 = lo * RAD - lo0; cd = Math.cos(d2); var sd = Math.sin(d2); pen = false;
+        for (la = -90; la <= 90; la += 6) {
+          var sl = Math.sin(la * RAD), cl = Math.cos(la * RAD);
+          z = sl0 * sl + cl0 * cl * cd;
+          if (z > 0) { x = C + R * cl * sd; y = C - R * (cl0 * sl - sl0 * cl * cd); if (pen) cx.lineTo(x, y); else { cx.moveTo(x, y); pen = true; } } else pen = false;
+        }
+      }
+      cx.stroke();
+
+      // Land
+      for (k = 0; k < NP; k++) {
+        var dd = LON[k] - lo0, c3 = Math.cos(dd);
+        PX[k] = C + R * LAT_C[k] * Math.sin(dd);
+        PY[k] = C - R * (cl0 * LAT_S[k] - sl0 * LAT_C[k] * c3);
+        PZ[k] = sl0 * LAT_S[k] + cl0 * LAT_C[k] * c3;
+      }
+      cx.fillStyle = "rgba(79,209,245,0.07)";
+      for (k = 0; k < NP; k++) if (PZ[k] <= 0) cx.fillRect(PX[k], PY[k], 1, 1);
+      var ps = Math.max(1.3, R * 0.0085), h = ps / 2;
+      cx.fillStyle = "rgba(79,209,245,0.30)";
+      for (k = 0; k < NP; k++) if (PZ[k] > 0 && LIT[k] < -0.08) cx.fillRect(PX[k] - h, PY[k] - h, ps, ps);
+      cx.fillStyle = "rgba(140,225,250,0.62)";
+      for (k = 0; k < NP; k++) if (PZ[k] > 0 && LIT[k] >= -0.08 && LIT[k] < 0.08) cx.fillRect(PX[k] - h, PY[k] - h, ps, ps);
+      cx.fillStyle = "rgba(210,246,255,0.96)";
+      for (k = 0; k < NP; k++) if (PZ[k] > 0 && LIT[k] >= 0.08) cx.fillRect(PX[k] - h, PY[k] - h, ps, ps);
+      cx.fillStyle = "rgba(255,180,84,0.9)";
+      for (k = 0; k < NP; k++) if (PZ[k] > 0 && LIT[k] < -0.12 && HSH[k] < 0.1) cx.fillRect(PX[k] - h * 1.2, PY[k] - h * 1.2, ps * 1.2, ps * 1.2);
+
+      // Tag-Nacht-Grenze
+      var ax = 0, ay = 1, az = 0;
+      if (Math.abs(sy) > 0.9) { ax = 1; ay = 0; }
+      var ux = sy * az - sz * ay, uy = sz * ax - sx * az, uz = sx * ay - sy * ax;
+      var ul = Math.sqrt(ux * ux + uy * uy + uz * uz); ux /= ul; uy /= ul; uz /= ul;
+      var vx = sy * uz - sz * uy, vy = sz * ux - sx * uz, vz = sx * uy - sy * ux;
+      cx.strokeStyle = "rgba(255,180,84,0.6)"; cx.lineWidth = 1.3; cx.beginPath(); pen = false;
+      for (var th = 0; th <= 360; th += 3) {
+        var c1 = Math.cos(th * RAD), s1 = Math.sin(th * RAD);
+        var tz = uz * c1 + vz * s1;
+        if (tz > 0) {
+          x = C + R * (ux * c1 + vx * s1); y = C - R * (uy * c1 + vy * s1);
+          if (pen) cx.lineTo(x, y); else { cx.moveTo(x, y); pen = true; }
+        } else pen = false;
+      }
+      cx.stroke();
+
+      // Sonne
+      if (sz > 0) {
+        x = C + R * sx; y = C - R * sy;
+        var gs = cx.createRadialGradient(x, y, 0, x, y, 26);
+        gs.addColorStop(0, "rgba(255,180,84,0.7)"); gs.addColorStop(1, "rgba(255,180,84,0)");
+        cx.fillStyle = gs; cx.beginPath(); cx.arc(x, y, 26, 0, TAU); cx.fill();
+        cx.fillStyle = AM; cx.beginPath(); cx.arc(x, y, 4.2, 0, TAU); cx.fill();
+        cx.font = "11px " + MONO; cx.textAlign = x > C ? "right" : "left"; cx.fillStyle = AM;
+        cx.fillText("Sonne", x + (x > C ? -10 : 10), y - 8);
+      }
+
+      // Städte
+      cx.font = "11px " + MONO;
+      for (i = 0; i < CITIES.length; i++) {
+        var c = CITIES[i], cla2 = Math.cos(c.lat * RAD), sla2 = Math.sin(c.lat * RAD), d4 = c.lon * RAD - lo0, cd4 = Math.cos(d4);
+        z = sl0 * sla2 + cl0 * cla2 * cd4;
+        if (z < 0.08) continue;
+        x = C + R * cla2 * Math.sin(d4); y = C - R * (cl0 * sla2 - sl0 * cla2 * cd4);
+        var on = c.id === sel;
+        if (on || c.id === "berlin") {
+          var fr = ((ts / 1100) % 1), rr = 5 + fr * 12;
+          cx.strokeStyle = "rgba(79,209,245," + ((1 - fr) * 0.7).toFixed(2) + ")"; cx.lineWidth = 1.2;
+          cx.beginPath(); cx.arc(x, y, rr, 0, TAU); cx.stroke();
+        }
+        cx.fillStyle = on ? "#ffffff" : CY; cx.beginPath(); cx.arc(x, y, on ? 3.6 : 2.7, 0, TAU); cx.fill();
+        cx.fillStyle = on ? "#ffffff" : "rgba(217,243,252,0.78)";
+        cx.textAlign = x > C + R * 0.5 ? "right" : "left";
+        cx.fillText(c.n, x + (x > C + R * 0.5 ? -9 : 9), y + 4);
+      }
+
+      // Äußere Ringe
+      var rot = ts / 1000 * 0.05;
+      cx.save(); cx.translate(C, C); cx.rotate(rot);
+      cx.strokeStyle = "rgba(79,209,245,0.55)"; cx.lineWidth = 1; cx.beginPath();
+      for (i = 0; i < 90; i++) {
+        var a = i / 90 * TAU, lg = i % 5 === 0, r1 = R * 1.12, r2 = r1 + (lg ? R * 0.045 : R * 0.022);
+        cx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1); cx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+      }
+      cx.stroke(); cx.restore();
+      cx.save(); cx.translate(C, C); cx.rotate(-rot * 1.7);
+      cx.strokeStyle = AM; cx.lineWidth = 2.5;
+      for (i = 0; i < 3; i++) { cx.beginPath(); cx.arc(0, 0, R * 1.21, i * TAU / 3, i * TAU / 3 + 0.5); cx.stroke(); }
+      cx.restore();
+
+      // Stimm-Ring
+      cx.beginPath();
+      for (i = 0; i <= 120; i++) {
+        var a2 = i / 120 * TAU, w = Math.sin(i * 0.8 + ts / 90) * 0.5 + Math.sin(i * 2.1 - ts / 65) * 0.5;
+        var rv = R * 1.065 + w * R * 0.035 * level;
+        x = C + Math.cos(a2) * rv; y = C + Math.sin(a2) * rv;
+        if (i) cx.lineTo(x, y); else cx.moveTo(x, y);
+      }
+      cx.closePath(); cx.strokeStyle = CY; cx.lineWidth = 1.4; cx.globalAlpha = 0.35 + 0.65 * level; cx.stroke(); cx.globalAlpha = 1;
+    }
+
+    // Ziehen und Tastatur
+    cv.addEventListener("pointerdown", function (e) {
+      drag = true; lx = e.clientX; ly = e.clientY; target = null;
+      try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+    });
+    cv.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY;
+      st.lon -= dx / R; st.lat = Math.max(-1.2, Math.min(1.2, st.lat + dy / R));
+      if (reduce) render(0, 0);
+    });
+    function up() { if (drag) { drag = false; resumeAt = performance.now() + 5000; } }
+    cv.addEventListener("pointerup", up);
+    cv.addEventListener("pointercancel", up);
+    cv.addEventListener("keydown", function (e) {
+      var m = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, 0.12], ArrowDown: [0, -0.12] }[e.key];
+      if (!m) return;
+      e.preventDefault(); target = null; st.lon += m[0]; st.lat = Math.max(-1.2, Math.min(1.2, st.lat + m[1])); resumeAt = performance.now() + 5000;
+      if (reduce) render(0, 0);
+    });
+
+    api.update = update; api.goTo = goTo; api.fit = fit; api.step = step; api.render = render;
+    api.sun = function () { return sun; };
+    update();
+    fit();
+    return api;
+  })();
+
+  /* ---------- Uhr, Weltzeit, Sonnenstand ---------- */
+  var dateFmt = new Intl.DateTimeFormat("de-DE", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  var wl = $("#wl"), wrows = [];
+  CITIES.forEach(function (c) {
+    var li = document.createElement("li"), b = document.createElement("button");
+    b.type = "button"; b.className = "wrow";
+    var n = document.createElement("span"), tm = document.createElement("span"), s = document.createElement("span");
+    n.className = "n"; tm.className = "tm"; s.className = "s"; n.textContent = c.n;
+    b.appendChild(n); b.appendChild(tm); b.appendChild(s);
+    b.addEventListener("click", function () { globe.goTo(c); sfx("jump"); });
+    li.appendChild(b); wl.appendChild(li);
+    wrows.push({ c: c, b: b, tm: tm, s: s });
+  });
+  globe.onSel = function (id) { wrows.forEach(function (r) { r.b.setAttribute("aria-current", r.c.id === id ? "true" : "false"); }); };
+  globe.onSel("berlin");
+
+  var sunCache = { key: "", val: null };
+  function berlinSun() {
+    var k = new Date().toISOString().slice(0, 16);
+    if (sunCache.key !== k) { sunCache.key = k; sunCache.val = sunTimes(52.52, 13.405, "Europe/Berlin"); }
+    return sunCache.val;
+  }
+  function sunWord(e) {
+    var r = Math.round(Math.abs(e));
+    return e > 0 ? "Tag, Sonne " + r + "° hoch" : e > -6 ? "Dämmerung, Sonne " + r + "° unter dem Horizont" : "Nacht, Sonne " + r + "° unter dem Horizont";
+  }
+  function tick() {
+    var d = new Date();
+    $("#subTime").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+    $("#subDate").textContent = dateFmt.format(d) + ", " + tz;
+    $("#subLine").textContent = phrase(d) + " Alle Systeme laufen.";
+    globe.update();
+    var sn = globe.sun();
+    $("#roSun").textContent = fmtLat(sn.dec / RAD) + " " + fmtLon(sn.lon / RAD);
+    var bt = berlinSun();
+    $("#roRise").textContent = bt ? fmtT(bt.rise, "Europe/Berlin") : "–";
+    $("#roSet").textContent = bt ? fmtT(bt.set, "Europe/Berlin") : "–";
+    wrows.forEach(function (r) {
+      r.tm.textContent = fmtT(d, r.c.z);
+      r.s.textContent = sunWord(elevAt(r.c.lat, r.c.lon, sn));
+    });
+    var s = Math.floor((Date.now() - started) / 1000);
+    var up = $("#upTime");
+    if (up) up.textContent = pad(Math.floor(s / 60)) + ":" + pad(s % 60);
+    if (reduce) { globe.render(0, 0); drawFps(); }
+  }
+
+  /* ---------- Systemstatus ---------- */
+  var sysT = $("#sys");
+  [
+    ["Bildrate", "fpsVal", "–"],
+    ["Netzwerk", "netVal", navigator.onLine ? "online" : "offline"],
+    ["Prozessorkerne", "cores", navigator.hardwareConcurrency ? String(navigator.hardwareConcurrency) : "unbekannt"],
+    ["Bildschirm", "scr", screen.width + " × " + screen.height],
+    ["Sitzung", "upTime", "00:00"]
+  ].forEach(function (r) {
+    var tr = document.createElement("tr");
+    var a = document.createElement("td"), b = document.createElement("td");
+    a.textContent = r[0]; b.id = r[1]; b.textContent = r[2];
+    tr.appendChild(a); tr.appendChild(b); sysT.appendChild(tr);
+  });
+  function netState() {
+    var on = navigator.onLine, ef = navigator.connection && navigator.connection.effectiveType;
+    $("#netVal").textContent = on ? (ef ? "online, " + ef : "online") : "offline";
+    var c = $("#chipNet");
+    c.textContent = on ? "Netz online" : "Netz offline";
+    c.className = "chip " + (on ? "ok" : "bad");
+  }
+  window.addEventListener("online", netState);
+  window.addEventListener("offline", netState);
+
+  var fpsBuf = [], fpsCv = $("#fps"), fpsX = fpsCv.getContext("2d"), FW = 300, FH = 60, FD = 1;
+  function fitFps() {
+    FD = Math.min(2, window.devicePixelRatio || 1);
+    var r = fpsCv.getBoundingClientRect();
+    FW = r.width || 300; FH = r.height || 60;
+    fpsCv.width = Math.round(FW * FD); fpsCv.height = Math.round(FH * FD);
+    fpsX.setTransform(FD, 0, 0, FD, 0, 0);
+    drawFps();
+  }
+  function drawFps() {
+    fpsX.clearRect(0, 0, FW, FH);
+    fpsX.strokeStyle = "rgba(79,209,245,0.16)"; fpsX.lineWidth = 1; fpsX.beginPath();
+    [30, 60].forEach(function (v) { var y = FH - 4 - (v / 70) * (FH - 8); fpsX.moveTo(0, y); fpsX.lineTo(FW, y); });
+    fpsX.stroke();
+    fpsX.fillStyle = "rgba(124,163,181,0.9)"; fpsX.font = "10px " + MONO; fpsX.textAlign = "left";
+    fpsX.fillText("60", 2, FH - 4 - (60 / 70) * (FH - 8) - 3);
+    if (fpsBuf.length < 2) return;
+    var n = 48, dx = FW / (n - 1), off = n - fpsBuf.length, i, x, y;
+    fpsX.beginPath();
+    for (i = 0; i < fpsBuf.length; i++) {
+      x = (off + i) * dx; y = FH - 4 - Math.min(70, fpsBuf[i]) / 70 * (FH - 8);
+      if (i) fpsX.lineTo(x, y); else fpsX.moveTo(x, y);
+    }
+    fpsX.strokeStyle = CY; fpsX.lineWidth = 1.6; fpsX.stroke();
+    fpsX.lineTo(x, FH); fpsX.lineTo(off * dx, FH); fpsX.closePath();
+    var gr = fpsX.createLinearGradient(0, 0, 0, FH); gr.addColorStop(0, "rgba(79,209,245,0.25)"); gr.addColorStop(1, "rgba(79,209,245,0)");
+    fpsX.fillStyle = gr; fpsX.fill();
+    fpsX.fillStyle = AM; fpsX.beginPath(); fpsX.arc(x, y, 3, 0, TAU); fpsX.fill();
+  }
+
+  /* ---------- KI-Kern ---------- */
+  var helpText = "Das kann ich lokal:\n" +
+    "zeit · datum · sonne\n" +
+    "globus <Stadt> (Berlin, New York, Los Angeles, Tokio)\n" +
+    "timer 10 (Minuten)\n" +
+    "notiz <Text> · mission <Text>\n" +
+    "Alles andere beantworte ich mit meinem KI-Kern.";
+  var SYS = "Du bist JARVIS, der persönliche KI-Assistent von Noah. Noah ist dein Boss, nenne ihn gelegentlich so. Antworte auf Deutsch, knapp (höchstens vier Sätze), souverän und mit trockenem Humor. Kein Markdown, keine Aufzählungszeichen, keine Emojis.";
+  var history = [];
+
+  async function ask(q) {
+    if (!sample) {
+      say("Mein KI-Kern ist in dieser Ansicht nicht verfügbar. Lokale Befehle gehen weiterhin, tippe \"hilfe\".");
+      return;
+    }
+    busy = true;
+    $("#logMeta").textContent = "denkt nach";
+    try { speechSynthesis.cancel(); } catch (e) {}
+    TTS.gen++; TTS.pending = 0; speaking = false; streamSpoken = 0;
+    var body = addLine("jarvis", "…");
+    history.push({ role: "user", content: q });
+    var t = history.slice(-7);
+    while (t.length && t[0].role !== "user") t.shift();
+    var now = new Date();
+    t = t.map(function (m) { return { role: m.role, content: m.content }; });
+    t[0].content = SYS + "\nAktuelle Zeit beim Boss: " + dateFmt.format(now) + ", " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + " Uhr (" + tz + ").\n\nNachricht von Noah: " + t[0].content;
+    try {
+      var r = await sample(t, {
+        cache: false,
+        modelTier: "quick",
+        onText: function (o) { body.textContent = o.text; log.scrollTop = log.scrollHeight; streamFeed(o.text, false); }
+      });
+      body.textContent = r.text;
+      history.push({ role: "assistant", content: r.text });
+      sfx("recv");
+      streamFeed(r.text, true);
+    } catch (e) {
+      history.pop();
+      var code = e && e.code;
+      body.textContent = code === "not_granted" ? "Zugriff auf den KI-Kern wurde nicht erlaubt. Ohne den kann ich nur lokale Befehle ausführen."
+        : code === "rate_limited" ? "Zu viele Anfragen in kurzer Zeit. Gib mir einen Moment, Boss."
+        : code === "cancelled" ? "Abgebrochen."
+        : "Das hat nicht geklappt. Versuch es bitte noch einmal.";
+    }
+    busy = false;
+    $("#logMeta").textContent = "bereit";
+  }
+
+  async function run(raw) {
+    var q = raw.trim();
+    if (!q) return;
+    addLine("you", q);
+    sfx("send");
+    var low = q.toLowerCase(), m;
+    var d = new Date();
+    if (/^(hilfe|help|\?)$/.test(low)) { say(helpText); return; }
+    if (/^(zeit|uhrzeit|wie spät.*|wieviel uhr.*)$/.test(low)) { say("Es ist " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + " Uhr, Boss."); return; }
+    if (/^(datum|welcher tag.*|welches datum.*)$/.test(low)) { say("Heute ist " + dateFmt.format(d) + "."); return; }
+    if (/^(sonne|sonnenstand|sonnenaufgang|sonnenuntergang)$/.test(low)) {
+      var bt = berlinSun(), e = elevAt(52.52, 13.405, globe.sun()), r = Math.round(Math.abs(e));
+      say(bt ? "In Berlin geht die Sonne heute um " + fmtT(bt.rise, "Europe/Berlin") + " Uhr auf und um " + fmtT(bt.set, "Europe/Berlin") + " Uhr unter. Gerade steht sie " + r + " Grad " + (e > 0 ? "über" : "unter") + " dem Horizont."
+        : "Heute gibt es in Berlin keinen normalen Sonnenauf- oder -untergang.");
+      return;
+    }
+    if ((m = low.match(/^(?:globus|zeig|zeige)\s+(.+)/))) {
+      var c = findCity(m[1]);
+      if (c) { globe.goTo(c); sfx("jump"); say("Globus dreht auf " + c.n + ". Dort ist es " + fmtT(d, c.z) + " Uhr."); }
+      else say("Diese Stadt kenne ich noch nicht. Ich habe Berlin, New York, Los Angeles und Tokio.");
+      return;
+    }
+    if ((m = low.match(/^timer\s+(\d{1,3})/))) { var mins = Math.max(1, Math.min(600, +m[1])); $("#tMin").value = mins; timer.set(mins); timer.start(); say("Timer läuft: " + mins + " Minuten."); return; }
+    if ((m = q.match(/^notiz\s+(.+)/i))) { var n = $("#notes"); n.value = (n.value ? n.value + "\n" : "") + m[1]; store.set("jarvis.notes", n.value); say("Notiert."); return; }
+    if ((m = q.match(/^mission\s+(.+)/i))) { addMission(m[1]); say("Mission angelegt."); return; }
+    await ask(q);
+  }
+
+  $("#cmdForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (busy) return;
+    var i = $("#cmd"), v = i.value;
+    i.value = "";
+    run(v);
+  });
+  ["hilfe", "sonne", "globus tokio", "timer 10", "Erzähl mir einen kurzen Witz"].forEach(function (s) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = s;
+    b.addEventListener("click", function () { if (!busy) run(s); });
+    $("#sugg").appendChild(b);
+  });
+
+  /* ---------- Missionen ---------- */
+  var missions = store.get("jarvis.missions", null);
+  if (!Array.isArray(missions)) {
+    missions = [
+      { t: "Neue Website-Audits für Leads prüfen", d: false },
+      { t: "Outreach-Mails durchgehen", d: false },
+      { t: "Reels-Pipeline kontrollieren", d: false }
+    ];
+    store.set("jarvis.missions", missions);
+  }
+  function renderMissions() {
+    var ul = $("#mList");
+    ul.innerHTML = "";
+    if (!missions.length) {
+      var p = document.createElement("li");
+      p.className = "empty";
+      p.textContent = "Keine Missionen. Trag oben die nächste ein.";
+      ul.appendChild(p);
+    }
+    missions.forEach(function (m, i) {
+      var li = document.createElement("li");
+      if (m.d) li.className = "done";
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = "m" + i;
+      cb.checked = m.d;
+      cb.addEventListener("change", function () { m.d = cb.checked; store.set("jarvis.missions", missions); renderMissions(); });
+      var lb = document.createElement("label");
+      lb.htmlFor = cb.id;
+      lb.textContent = m.t;
+      var x = document.createElement("button");
+      x.type = "button";
+      x.className = "x";
+      x.setAttribute("aria-label", "Mission löschen");
+      x.textContent = "×";
+      x.addEventListener("click", function () { missions.splice(i, 1); store.set("jarvis.missions", missions); renderMissions(); });
+      li.appendChild(cb); li.appendChild(lb); li.appendChild(x);
+      ul.appendChild(li);
+    });
+    $("#mCount").textContent = missions.filter(function (m) { return !m.d; }).length + " offen";
+  }
+  function addMission(t) {
+    t = t.trim();
+    if (!t) return;
+    missions.push({ t: t, d: false });
+    store.set("jarvis.missions", missions);
+    renderMissions();
+  }
+  $("#mForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    addMission($("#mInput").value);
+    $("#mInput").value = "";
+  });
+
+  /* ---------- Timer ---------- */
+  var CIRC = 2 * Math.PI * 50;
+  var timer = (function () {
+    var total = 25 * 60, left = total, endAt = 0, iv = null, running = false;
+    function show() {
+      var s = Math.max(0, Math.ceil(left));
+      $("#tDisp").textContent = pad(Math.floor(s / 60)) + ":" + pad(s % 60);
+      $("#tRing").setAttribute("stroke-dashoffset", String(CIRC * (total ? 1 - left / total : 0)));
+    }
+    function stop() { clearInterval(iv); iv = null; running = false; $("#tGo").textContent = "Start"; }
+    function loop() {
+      left = (endAt - Date.now()) / 1000;
+      if (left <= 0) {
+        left = 0; stop(); show();
+        $("#tState").textContent = "abgelaufen";
+        $("#tBox").classList.add("end");
+        ac(); tone(880, 880, 0.25, "sine", 0.2); tone(880, 880, 0.25, "sine", 0.2, 0.35); tone(880, 880, 0.25, "sine", 0.2, 0.7);
+        sysLine("› Timer abgelaufen");
+        speakNow("Der Timer ist abgelaufen, Boss.");
+        return;
+      }
+      show();
+    }
+    return {
+      set: function (mins) { stop(); total = mins * 60; left = total; $("#tBox").classList.remove("end"); $("#tState").textContent = "bereit"; show(); },
+      start: function () {
+        if (running) return;
+        if (left <= 0) left = total;
+        endAt = Date.now() + left * 1000;
+        running = true;
+        $("#tGo").textContent = "Pause";
+        $("#tState").textContent = "läuft";
+        $("#tBox").classList.remove("end");
+        iv = setInterval(loop, 250);
+      },
+      pause: function () { if (!running) return; left = (endAt - Date.now()) / 1000; stop(); $("#tState").textContent = "pausiert"; },
+      toggle: function () { running ? this.pause() : this.start(); },
+      isRunning: function () { return running; }
+    };
+  })();
+  [5, 15, 25, 50].forEach(function (mn) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "btn sm"; b.textContent = mn + " Min";
+    b.addEventListener("click", function () { $("#tMin").value = mn; timer.set(mn); });
+    $("#presets").appendChild(b);
+  });
+  $("#tGo").addEventListener("click", function () {
+    if (!timer.isRunning()) {
+      var v = parseInt($("#tMin").value, 10);
+      if (v > 0 && v <= 600 && $("#tState").textContent !== "pausiert") timer.set(v);
+    }
+    timer.toggle();
+  });
+  $("#tReset").addEventListener("click", function () {
+    var v = parseInt($("#tMin").value, 10);
+    timer.set(v > 0 && v <= 600 ? v : 25);
+  });
+  $("#tMin").addEventListener("change", function () {
+    var v = parseInt($("#tMin").value, 10);
+    if (!timer.isRunning() && v > 0 && v <= 600) timer.set(v);
+  });
+
+  /* ---------- Notizen ---------- */
+  var notes = $("#notes");
+  notes.value = store.get("jarvis.notes", "");
+  var nt = null;
+  notes.addEventListener("input", function () {
+    clearTimeout(nt);
+    nt = setTimeout(function () { store.set("jarvis.notes", notes.value); }, 400);
+  });
+
+  /* ---------- Pegel und Bildschleife ---------- */
+  var eq = $("#eq"), ex = eq.getContext("2d"), EW = 460, EH = 44, level = 0, last = 0;
+  function fitEq() {
+    var dpr = Math.min(2, window.devicePixelRatio || 1), e = eq.getBoundingClientRect();
+    EW = e.width || 460; EH = e.height || 44;
+    eq.width = Math.round(EW * dpr); eq.height = Math.round(EH * dpr);
+    ex.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function drawEq(ts, lv) {
+    ex.clearRect(0, 0, EW, EH);
+    var n = 40, bw = EW / n;
+    for (var i = 0; i < n; i++) {
+      var idle = 0.07 + 0.04 * Math.sin(ts / 500 + i * 0.6);
+      var amp = lv * (0.3 + 0.7 * Math.abs(Math.sin(ts / 90 + i * 1.7) * Math.sin(ts / 230 + i * 0.9)));
+      var v = Math.min(1, idle + amp), bh = Math.max(2, v * EH);
+      ex.globalAlpha = 0.35 + 0.65 * v;
+      ex.fillStyle = i % 10 === 0 ? AM : CY;
+      ex.fillRect(i * bw + 1, (EH - bh) / 2, Math.max(1, bw - 3), bh);
+    }
+    ex.globalAlpha = 1;
+  }
+  var fc = 0, ft = 0;
+  function frame(ts) {
+    var dt = last ? Math.min(0.1, (ts - last) / 1000) : 0; last = ts;
+    fc++;
+    if (!ft) ft = ts;
+    if (ts - ft >= 500) {
+      var f = Math.round(fc * 1000 / (ts - ft));
+      fpsBuf.push(f); if (fpsBuf.length > 48) fpsBuf.shift();
+      $("#fpsVal").textContent = f + " Bilder/s";
+      drawFps(); fc = 0; ft = ts;
+    }
+    var boost = performance.now() < boostUntil;
+    var target = speaking ? 1 : (busy || boost ? 0.55 : 0);
+    level += (target - level) * Math.min(1, dt * 8);
+    globe.step(dt, performance.now());
+    globe.render(ts, level);
+    drawEq(ts, level);
+    requestAnimationFrame(frame);
+  }
+  function fitAll() { globe.fit(); fitEq(); fitFps(); if (reduce) { globe.render(0, 0); drawEq(0, 0); drawFps(); } }
+  fitAll();
+  window.addEventListener("resize", fitAll);
+  if (window.ResizeObserver) { try { new ResizeObserver(function () { globe.fit(); fitEq(); fitFps(); }).observe($("#globe")); } catch (e) {} }
+
+  if (!reduce) {
+    var pq = 0;
+    window.addEventListener("pointermove", function (e) {
+      if (pq) return;
+      pq = requestAnimationFrame(function () {
+        pq = 0;
+        document.documentElement.style.setProperty("--mx", e.clientX + "px");
+        document.documentElement.style.setProperty("--my", e.clientY + "px");
+      });
+    });
+  }
+
+  /* ---------- Start ---------- */
+  renderMissions();
+  timer.set(25);
+  netState();
+  tick();
+  setInterval(tick, 1000);
+  globe.goTo(CITIES[0], reduce);
+  sysLine("Systeme initialisiert. Klick auf \"Jarvis aktivieren\" für Stimme und Ton.");
+  addLine("jarvis", "Hallo Boss Noah. Was kann ich für dich tun?");
+  if (!reduce) requestAnimationFrame(frame);
+
+  function setAi(ok) {
+    var c = $("#chipAi");
+    c.textContent = ok ? "KI-Kern bereit" : "KI-Kern aus";
+    c.className = "chip " + (ok ? "ok" : "bad");
+  }
+  try {
+    if (window.claude && window.claude.use) {
+      window.claude.use("sample").then(function (s) { sample = s || null; setAi(!!sample); }, function () { setAi(false); });
+    } else { setAi(false); }
+  } catch (e) { setAi(false); }
+})();
+</script>
+
+<script>
+(function () {
+  var BUILD = "81cf22d30845";
+  var $ = function (s) { return document.querySelector(s); };
+
+  // Ausserhalb von Claude gibt es keinen KI-Kern.
+  if (!(window.claude && window.claude.use)) {
+    var chip = $("#chipAi");
+    if (chip) { chip.textContent = "KI-Kern nur in Claude"; chip.className = "chip"; }
+  }
+
+  // Installieren
+  var deferred = null, bi = $("#btnInstall");
+  var standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferred = e;
+    if (bi && !standalone) bi.hidden = false;
+  });
+  if (bi) bi.addEventListener("click", async function () {
+    if (!deferred) return;
+    deferred.prompt();
+    try { await deferred.userChoice; } catch (e) {}
+    deferred = null;
+    bi.hidden = true;
+  });
+  window.addEventListener("appinstalled", function () { if (bi) bi.hidden = true; });
+
+  // Service Worker
+  if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+
+  // Automatisches Update: version.json mit der eingebauten Version vergleichen
+  var checking = false, lastCheck = 0;
+  function toast(msg) {
+    var t = document.createElement("div");
+    t.setAttribute("role", "status");
+    t.textContent = msg;
+    t.style.cssText = "position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));max-width:420px;margin-inline:auto;z-index:50;background:var(--panel-2);border:1px solid var(--cyan);color:var(--text);padding:10px 14px;font-family:var(--font-mono);font-size:13px;text-align:center";
+    document.body.appendChild(t);
+  }
+  async function check(force) {
+    var now = Date.now();
+    if (checking || (!force && now - lastCheck < 30000)) return;
+    checking = true; lastCheck = now;
+    try {
+      var r = await fetch("version.json?t=" + now, { cache: "no-store" });
+      if (!r.ok) return;
+      var j = await r.json();
+      if (j && j.v && j.v !== BUILD) {
+        toast("Neue Version von Jarvis. Lade neu …");
+        setTimeout(function () { location.reload(); }, 1800);
+      }
+    } catch (e) {} finally { checking = false; }
+  }
+  window.__jarvisCheckUpdate = check;
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") check(false); });
+  window.addEventListener("online", function () { check(true); });
+  setInterval(function () { check(false); }, 5 * 60 * 1000);
+  setTimeout(function () { check(true); }, 3000);
+})();
+</script>
+
+</body>
+</html>

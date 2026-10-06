@@ -208,8 +208,9 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
         <div class="vgrid">
           <label for="vSel">Stimme</label><select id="vSel"></select>
           <label for="vRate">Tempo</label><input id="vRate" type="range" min="0.7" max="1.4" step="0.05" value="1">
-          <label for="vPitch">Tonhöhe</label><input id="vPitch" type="range" min="0.5" max="1.5" step="0.05" value="0.85">
-          <span></span><button class="btn sm" id="vTest" type="button" style="justify-self:start">Stimme testen</button>
+          <label for="vPitch">Tonhöhe</label><input id="vPitch" type="range" min="0.3" max="1.5" step="0.05" value="0.85">
+          <label for="vMale">Klang</label><label style="display:flex;gap:8px;align-items:center"><input id="vMale" type="checkbox" checked> Männlich (tiefer)</label>
+          <span></span><div class="row"><button class="btn sm" id="vNext" type="button">Nächste Stimme</button><button class="btn sm" id="vTest" type="button">Stimme testen</button></div>
           <div class="vinfo" id="vInfo">Stimmen werden geladen …</div>
         </div>
       </details>
@@ -439,8 +440,11 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
   TTS.saved = vs.name || "";
   TTS.rate = typeof vs.rate === "number" ? vs.rate : 1;
   TTS.pitch = typeof vs.pitch === "number" ? vs.pitch : 0.85;
+  TTS.male = vs.male !== false;
   function isDe(v) { return v && v.lang && /^de/i.test(String(v.lang).replace("_", "-")); }
-  var PREF = /(google deutsch|stefan|conrad|markus|daniel|yannick|florian|jürgen|hans|killian)/i;
+  var PREF = /(stefan|conrad|markus|daniel|yannick|florian|jürgen|hans|killian|viktor|martin|reiner|jonas|tim\b|michael|andreas|thomas|frank|klaus|paul\b|male|männlich|google deutsch)/i;
+  var MALE = /(stefan|conrad|markus|daniel|yannick|florian|jürgen|juergen|hans|killian|jonas|christoph|viktor|klaus|thomas|male|männlich)/i;
+  function isMale(v) { return !!v && MALE.test(v.name) && !/female|weiblich/i.test(v.name); }
   function pickVoice() {
     var all = TTS.voices;
     if (!all.length) return null;
@@ -450,6 +454,7 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
     }
     var de = all.filter(isDe);
     if (!de.length) return null;
+    if (TTS.male) { var m = de.filter(isMale)[0]; if (m) return m; }
     return de.filter(function (v) { return PREF.test(v.name); })[0]
       || de.filter(function (v) { return /^de-de$/i.test(String(v.lang).replace("_", "-")); })[0]
       || de[0];
@@ -463,12 +468,12 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
     sel.add(new Option("Automatisch (beste deutsche Stimme)", ""));
     TTS.voices.slice().sort(function (a, b) {
       return (isDe(a) ? 0 : 1) - (isDe(b) ? 0 : 1) || a.name.localeCompare(b.name);
-    }).forEach(function (v) { sel.add(new Option(v.name + " (" + v.lang + ")", v.name)); });
+    }).forEach(function (v) { sel.add(new Option(v.name + " (" + v.lang + ")" + (isMale(v) ? ", männlich" : ""), v.name)); });
     sel.value = cur;
     if (sel.value !== cur) sel.value = "";
     var n = TTS.voices.filter(isDe).length;
     $("#vInfo").textContent = !TTS.voices.length ? "Noch keine Stimmen geladen. Klick auf \"Stimme testen\"."
-      : n ? n + " deutsche Stimme" + (n > 1 ? "n" : "") + " gefunden."
+      : n ? n + " deutsche Stimme" + (n > 1 ? "n" : "") + " gefunden. Mit \"Nächste Stimme\" hörst du sie durch."
       : "Keine deutsche Stimme installiert. Jarvis nutzt die Standardstimme dieses Geräts.";
   }
   if (TTS.ok) {
@@ -478,7 +483,8 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
   } else { loadVoices(); }
   $("#vRate").value = TTS.rate;
   $("#vPitch").value = TTS.pitch;
-  function saveVoice() { store.set("jarvis.voice", { name: TTS.saved, rate: TTS.rate, pitch: TTS.pitch }); }
+  $("#vMale").checked = TTS.male;
+  function saveVoice() { store.set("jarvis.voice", { name: TTS.saved, rate: TTS.rate, pitch: TTS.pitch, male: TTS.male }); }
   $("#vSel").addEventListener("change", function () { TTS.saved = $("#vSel").value; saveVoice(); });
   $("#vRate").addEventListener("input", function () { TTS.rate = parseFloat($("#vRate").value); saveVoice(); });
   $("#vPitch").addEventListener("input", function () { TTS.pitch = parseFloat($("#vPitch").value); saveVoice(); });
@@ -486,6 +492,19 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
     loadVoices();
     ac();
     speakNow("Hallo Boss Noah. Das ist meine Stimme.", true);
+  });
+  $("#vMale").addEventListener("change", function () { TTS.male = $("#vMale").checked; saveVoice(); });
+  $("#vNext").addEventListener("click", function () {
+    loadVoices();
+    ac();
+    var list = TTS.voices.filter(isDe);
+    if (!list.length) list = TTS.voices;
+    if (!list.length) { $("#vInfo").textContent = "Keine Stimmen gefunden. Dieses Gerät bietet keine Sprachausgabe an."; return; }
+    var i = list.indexOf(pickVoice()), n = (i + 1) % list.length, v = list[n];
+    TTS.saved = v.name; saveVoice();
+    $("#vSel").value = v.name;
+    $("#vInfo").textContent = "Stimme " + (n + 1) + " von " + list.length + ": " + v.name;
+    speakNow("Hallo Boss Noah. So klingt diese Stimme.", true);
   });
 
   function setVoiceChip() {
@@ -514,9 +533,10 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
     var u = new SpeechSynthesisUtterance(t);
     var v = pickVoice();
     u.lang = v ? v.lang : "de-DE";
-    if (v) u.voice = v;
-    u.rate = TTS.rate;
-    u.pitch = TTS.pitch;
+    try { if (v) u.voice = v; } catch (e) {}
+    var deep = TTS.male && !isMale(v);
+    u.rate = deep ? TTS.rate * 0.95 : TTS.rate;
+    u.pitch = deep ? Math.max(0.3, TTS.pitch * 0.75) : TTS.pitch;
     u.onstart = function () {
       TTS.started = true;
       if (TTS.blocked) { TTS.blocked = false; setVoiceChip(); }
@@ -1236,7 +1256,7 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
 
 <script>
 (function () {
-  var BUILD = "81cf22d30845";
+  var BUILD = "10e13802b5c4";
   var $ = function (s) { return document.querySelector(s); };
 
   // Ausserhalb von Claude gibt es keinen KI-Kern.

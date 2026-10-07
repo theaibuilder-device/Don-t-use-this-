@@ -176,6 +176,29 @@ td { padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
 td:last-child { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: var(--ink); border: 1px solid var(--line); padding: 12px; font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
+
+/* ---------- Brutal ---------- */
+body::before { content: ""; position: fixed; inset: 0 0 auto 0; height: 6px; z-index: 40; pointer-events: none; background: repeating-linear-gradient(-45deg, var(--cyan) 0 10px, #000 10px 20px); }
+body::after { content: ""; position: fixed; inset: 0; z-index: 39; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0 1px, transparent 1px 3px), radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.65) 100%); }
+h1 { text-transform: uppercase; font-weight: 800; letter-spacing: 0.01em; text-shadow: 3px 3px 0 #5a0710, 0 0 34px rgba(255, 45, 63, 0.5); }
+.panel { clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px)); border: 1px solid var(--cyan); border-left-width: 5px; background: linear-gradient(135deg, rgba(60, 8, 14, 0.55), var(--panel) 40%); }
+.panel::before, .panel::after { display: none; }
+.ph h2, .ph h3 { text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; }
+.btn { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; border-width: 2px; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+.btn:hover { background: var(--cyan); color: #000; }
+.btn.amber:hover { background: var(--amber); color: #000; }
+.chip { text-transform: uppercase; letter-spacing: 0.06em; border-width: 2px; }
+#log, .cmd input, .add input, textarea#notes, .vgrid select { border-width: 2px; border-radius: 0; }
+.clock .t { font-weight: 700; text-shadow: 2px 2px 0 #5a0710, 0 0 22px rgba(255, 45, 63, 0.6); }
+@media (prefers-reduced-motion: no-preference) {
+  h1 { animation: glitch 5s steps(1) infinite; }
+  @keyframes glitch {
+    0%, 91%, 100% { transform: none; text-shadow: 3px 3px 0 #5a0710, 0 0 34px rgba(255, 45, 63, 0.5); }
+    92% { transform: translateX(-4px) skewX(-6deg); text-shadow: -5px 0 0 #00e5ff, 5px 0 0 #ff2d3f; }
+    94% { transform: translateX(5px); text-shadow: 5px 0 0 #00e5ff, -5px 0 0 #ff2d3f; clip-path: inset(30% 0 40% 0); }
+    96% { transform: translateX(-2px); clip-path: none; }
+  }
+}
 </style>
 </head>
 <body>
@@ -1256,7 +1279,7 @@ textarea#notes { width: 100%; min-height: 120px; resize: vertical; background: v
 
 <script>
 (function () {
-  var BUILD = "b3b7a6ba0f6e";
+  var BUILD = "077ff9d77c30";
   var $ = function (s) { return document.querySelector(s); };
 
   // Ausserhalb von Claude gibt es keinen KI-Kern.
